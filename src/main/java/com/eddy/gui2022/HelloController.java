@@ -48,6 +48,7 @@ public class HelloController {
     int saveCounter=0;
     boolean changedName = false;
     boolean characterCreated = false;
+    Player player;
 
 
     @FXML
@@ -58,26 +59,7 @@ public class HelloController {
         nameField.setEditable(false);
         nameField.setVisible(false);
         saveCharacterButton.setVisible(false);
-
-        //load and/or create character data file
-        characterFile = new File("character.deg");
-        if (!characterFile.exists()) {
-            try {
-                characterFile.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-
-        //load external resources
-        final Image image;
-        try {
-            image = new Image(new FileInputStream("src/main/resources/com/eddy/gui2022/guy.png"));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("Could not load player Image");
-        }
-
+        player = new Player("character.png",x,y);
 
 
         AnimationTimer anim = new AnimationTimer() {
@@ -98,7 +80,8 @@ public class HelloController {
                 //else, character has been created, play the game
                 else {
                     movement();
-                    gc.drawImage(image,x1,y1);
+                    player.testCollision(gc);
+                    player.draw(gc);
                 }
             }
         };
@@ -109,42 +92,19 @@ public class HelloController {
     @FXML
     protected void movement(){
         if(HelloApplication.currentlyActiveKeys.contains(KeyCode.A.toString())){
-            moveLeft();
+            player.moveLeft();
         }
         if (HelloApplication.currentlyActiveKeys.contains(KeyCode.D.toString())) {
-            moveRight();
+            player.moveRight();
         }
         if (HelloApplication.currentlyActiveKeys.contains(KeyCode.S.toString())) {
-            moveDown();
+            player.moveDown();
         }
         if (HelloApplication.currentlyActiveKeys.contains(KeyCode.W.toString())) {
-            moveUp();
+            player.moveUp();
         }
     }
 
-    private void moveUp(){
-        if (y1 > 0)
-            y1 -= 1;
-    }
-
-    private void moveDown(){
-        if (y1 < 410)
-            y1 += 1;
-    }
-
-    private void moveRight(){
-        if(x1 < 470)
-            x1 += 1;
-    }
-
-    private void moveLeft(){
-        if (x1 > 0)
-            x1 -= 1;
-    }
-
-    public void keyPressed(KeyEvent e) {
-
-    }
     @FXML
     protected void onOpenMenuClicked() throws FileNotFoundException {
         File file = HelloApplication.openLoadDialog();
@@ -167,24 +127,21 @@ public class HelloController {
 
     protected ArrayList<String> parseCSV(String line) {
         ArrayList<String> list = new ArrayList<>();
-        int index = 0;
-
-        while(line.contains(",")) {
-            String currentChar = line.substring(index,index+1);
-
-            if (currentChar.equals(",")) {
-                list.add(line.substring(0,index));
-                line = line.substring(index+1);
-                index = 0;
-            }
-
-            else
-                index++;
+        int indexOfComma = line.indexOf(",");
+        while(indexOfComma != -1) {
+            //System.out.println("Index of comma: " + indexOfComma);
+            //System.out.println("Adding " + line.substring(0,indexOfComma));
+            list.add(line.substring(0,indexOfComma));
+            line = line.substring(indexOfComma+1);
+            indexOfComma = line.indexOf(",");
         }
-
-        if (list.size() > 0)
-            list.add(line);//adds last part of array
+        list.add(line);
         return list;
+    }
+    public void printList(ArrayList<String> list) {
+        for(String s: list) {
+            System.out.println(s);
+        }
     }
 
     @FXML
